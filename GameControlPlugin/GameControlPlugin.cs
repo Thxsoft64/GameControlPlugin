@@ -52,6 +52,8 @@ public class GameControlPlugin : Plugin
         
     public override void Load()
     {
+        PluginLog.Info("Plugin loading...");
+        
         Info.DisplayName = "GameControl";
         Info.Homepage = "https://loupedeck.com/developer/";
         Info.Icon16x16 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon16x16.png");
@@ -94,8 +96,8 @@ public class GameControlPlugin : Plugin
                         var str = text.Trim();
                         if (str.Length > 0 && str[0] != '#')
                         {
-                            var strArray = text.Split("=");
-                            var lower1 = strArray[0].Trim().ToLower();
+                            var strArray = text.Split("=", StringSplitOptions.TrimEntries);
+                            var lower1 = strArray[0].ToLower();
                             if (strArray.Length == 2)
                             {
                                 var lower2 = strArray[1].Trim().ToLower();
@@ -430,7 +432,7 @@ public class GameControlPlugin : Plugin
     {
     }
 
-    public static CommandInfoType GetCommandInfo(string parameter)
+    public static CommandInfoType GetCommandInfo(string text)
     {
         var commandInfo = new CommandInfoType { 
             Value = -1, 
@@ -446,13 +448,15 @@ public class GameControlPlugin : Plugin
             DXSendType = DefaultDXSendType,
             ToggleAsButton = DefaultToggleAsButton
         };
-            
-        var strArray1 = parameter != null ? parameter.Split(";") : new string[1] { "" };
-            
-        foreach (var t in strArray1)
+
+        if (text == null || text.Split(':').Length == 2 && text.Length == 65) // What are these?
+            return commandInfo;
+        
+        foreach (var parameter in text.Split(";", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
         {
-            var strArray2 = t.Split("=");
-            var lower1 = strArray2[0].Trim().ToLower();
+            var strArray2 = parameter.Split("=", StringSplitOptions.TrimEntries);
+            var lower1 = strArray2[0].ToLower();
+            
             if (strArray2.Length == 1)
             {
                 if (int.TryParse(lower1, out var result1))
@@ -507,9 +511,6 @@ public class GameControlPlugin : Plugin
                             commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareUpButton.png");
                             continue;
                         default:
-                            commandInfo.Value = -1;
-                            PluginWarning = "Invalid Value";
-                            PluginWarningStopwatch.Restart();
                             continue;
                     }
                 }

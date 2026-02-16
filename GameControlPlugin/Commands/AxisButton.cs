@@ -4,10 +4,9 @@
     using System.Reflection;
     using Helpers;
 
-    public class AxisButton : PluginDynamicCommand
+    public abstract class AxisButton : PluginDynamicCommand
     {
-        
-        public AxisButton()
+        protected AxisButton()
         {
             DisplayName = $"Axis Button";
             GroupName = "Not used";
@@ -157,7 +156,7 @@
     public class ButtonInfo
     {
         private PropertyInfo _stickAxisProperty;
-        private HID_USAGES _hidUsages;
+//        private HID_USAGES _hidUsages;
 
         public string AxisName {get; private set; }
     
@@ -169,15 +168,15 @@
             AxisName = buttonName;
             _stickAxisProperty = joystick.GetType().GetProperty(buttonName);
    
-            if(!Enum.TryParse($"HID_USAGE_{buttonName}", out _hidUsages))
-                throw new Exception($"The button name '{buttonName}' is invalid.");
+            // if(!Enum.TryParse($"HID_USAGE_{buttonName}", out _hidUsages))
+            //     throw new Exception($"The button name '{buttonName}' is invalid.");
         }
 
         internal void SetButtonValue(Joystick joystick, int value)
         {
             _stickAxisProperty?.SetValue(joystick, value);
 
-            joystick.SetAxis(value, _hidUsages);
+  //          joystick.SetAxis(value, _hidUsages);
         }
     }
 }

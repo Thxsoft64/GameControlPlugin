@@ -30,11 +30,11 @@ copyright: Copyright © 2023 Mikal Shaikh and Steven White. All rights reserved.
 
 # Location of plugin files on Windows (relative to the plugin base directory).
 # This parameter is required to support Windows.
-#pluginFolderWin: win
+pluginFolderWin: .
 
 # Location of plugin files on macOS (relative to the plugin base directory).
 # This parameter is required to support Mac.
-pluginFolderMac: bin
+#pluginFolderMac: bin
 
 # List of supported devices.
 supportedDevices:

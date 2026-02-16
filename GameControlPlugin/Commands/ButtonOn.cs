@@ -11,7 +11,7 @@
             {
                 Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
                 GameControlPlugin.PluginWarning = "";
-                GameControlPlugin.InWarning = true;
+                GameControlPlugin.InWarning = false;
             }
 
             if (GameControlPlugin.InWarning && GameControlPlugin.PluginWarningStopwatch.ElapsedMilliseconds > 2000L)

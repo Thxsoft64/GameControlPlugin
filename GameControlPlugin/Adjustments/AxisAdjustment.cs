@@ -154,7 +154,7 @@
     public class AdjustmentInfo
     {
         private PropertyInfo _stickAxisProperty;
-        private HID_USAGES _hidUsages;
+     //   private HID_USAGES _hidUsages;
 
         public string StickAxis { get; private set; }
         public int StickValue { get; set; }
@@ -169,8 +169,8 @@
 
             _stickAxisProperty = joystick.GetType().GetProperty(stickAxis);
 
-            if (!Enum.TryParse($"HID_USAGE_{stickAxis}", out _hidUsages))
-                throw new Exception($"The stick axis '{stickAxis}' is invalid. Must set 'axis=<{GameControlPlugin.AxisNames}>'.");
+            // if (!Enum.TryParse($"HID_USAGE_{stickAxis}", out _hidUsages))
+            //     throw new Exception($"The stick axis '{stickAxis}' is invalid. Must set 'axis=<{GameControlPlugin.AxisNames}>'.");
 
             StickValue = (int?)_stickAxisProperty?.GetValue(joystick) ?? 0;
         }
@@ -179,7 +179,7 @@
         {
             _stickAxisProperty?.SetValue(joystick, StickValue);
 
-            joystick.SetAxis(StickValue, _hidUsages);
+//            joystick.SetAxis(StickValue, _hidUsages);
         }
     }
 }

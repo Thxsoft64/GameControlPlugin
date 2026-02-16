@@ -6,10 +6,11 @@
     {
         protected override void RunCommand(string actionParameter)
         {
-            var CommandInfo = new CommandInfoType();
-            CommandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
+            var commandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
+            
             if (GameControlPlugin.PluginError != "")
                 Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
+            
             if (GameControlPlugin.PluginWarning != "" && !GameControlPlugin.InWarning)
             {
                 Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
@@ -25,9 +26,9 @@
 
             var joystick = JoystickManager.GetJoystick(actionParameter);
             
-            joystick.SetBtn(true, (uint)CommandInfo.Value);
+            joystick.SetBtn(true, (uint)commandInfo.Value);
             
-            Task.Delay(JoystickManager.ButtonPressDelay).ContinueWith(t => joystick.SetBtn(false, (uint)CommandInfo.Value));
+            Task.Delay(JoystickManager.ButtonPressDelay).ContinueWith(t => joystick.SetBtn(false, (uint)commandInfo.Value));
             
             ActionImageChanged(actionParameter);
         }

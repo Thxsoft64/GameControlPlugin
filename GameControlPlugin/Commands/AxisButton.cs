@@ -1,4 +1,6 @@
-﻿namespace Loupedeck.GameControlPlugin.Commands
+﻿using CoreDX.vJoy.Wrapper;
+
+namespace Loupedeck.GameControlPlugin.Commands
 {
     using System;
     using System.Reflection;
@@ -156,7 +158,7 @@
     public class ButtonInfo
     {
         private PropertyInfo _stickAxisProperty;
-//        private HID_USAGES _hidUsages;
+        private VJoyControllerManager.USAGES _hidUsages;
 
         public string AxisName {get; private set; }
     
@@ -164,19 +166,20 @@
         {
             if (string.IsNullOrWhiteSpace(buttonName))
                 throw new Exception($"The button name was missing. Must set 'axis=<{GameControlPlugin.AxisNames}>'.");
-            
+        
+            if(!Enum.TryParse($"HID_USAGE_{Joystick.GetCompatibleAxisName(buttonName)}", out _hidUsages))
+                throw new Exception($"The button name '{buttonName}' is invalid.");
+
             AxisName = buttonName;
+            
             _stickAxisProperty = joystick.GetType().GetProperty(buttonName);
-   
-            // if(!Enum.TryParse($"HID_USAGE_{buttonName}", out _hidUsages))
-            //     throw new Exception($"The button name '{buttonName}' is invalid.");
         }
 
         internal void SetButtonValue(Joystick joystick, int value)
         {
             _stickAxisProperty?.SetValue(joystick, value);
 
-  //          joystick.SetAxis(value, _hidUsages);
+            joystick.SetAxis(value, _hidUsages);
         }
     }
 }

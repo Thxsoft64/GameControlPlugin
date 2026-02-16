@@ -3,17 +3,22 @@
 using System;
 using System.Collections.Generic;
 
-using vJoyInterfaceWrap;
+using CoreDX.vJoy.Wrapper;
 
 public static class JoystickManager
 {
-    private static uint _defaultJoystickId; 
     private static Plugin _plugin;
-    private static readonly vJoy _vJoy = new();
-    private static readonly object _lock = new();
+    private static uint _defaultJoystickId; 
+    private static readonly VJoyControllerManager VJoy = VJoyControllerManager.GetManager();
+    private static readonly object Lock = new();
     public static readonly IDictionary<uint, Joystick> Joysticks = new Dictionary<uint, Joystick>();
     public static readonly IDictionary<int, uint> JoystickIdHashMap = new Dictionary<int, uint>();
 
+    public static void Dispose()
+    {
+        VJoy.Dispose();
+    }
+    
     public static int ButtonPressDelay { get; } = 50;
     public static void SetDefaultJoystickId(uint id) => _defaultJoystickId = id;
 
@@ -44,11 +49,11 @@ public static class JoystickManager
             
         if (!Joysticks.TryGetValue(id, out var joystick))
         {
-            lock (_lock)
+            lock (Lock)
             {
                 if (!Joysticks.TryGetValue(id, out joystick))
                 {
-                    joystick = MakeJoystick(id, actionParameter);
+                    joystick = MakeJoystick(id);
 
                     Joysticks.Add(id, joystick);
                 }
@@ -58,62 +63,57 @@ public static class JoystickManager
         return joystick;
     }
 
-    private static Joystick MakeJoystick(uint id, string actionParameter)
+    private const int VjdStatOwn = 1;
+    private const int VjdStatFree = 2;
+    private const int VjdStatBusy = 3;
+    private const int VjdStatMiss = 4;
+    private const int VjdStatUnknown = 5;
+    
+    private static Joystick MakeJoystick(uint id)
     {
-        var vjdStatus = _vJoy.GetVJDStatus(id);
+        if (!VJoy.DriverMatch)
+            _plugin.OnPluginStatusChanged(PluginStatus.Error, "Version of Driver does NOT match DLL Version.");
+        
+        var vjdStatus = VJoy.GetVJDStatus(id);
             
         switch (vjdStatus)
         {
-            case VjdStat.VJD_STAT_OWN:
+            case VjdStatOwn:
                 _plugin.OnPluginStatusChanged(PluginStatus.Error, "vJoy Device is already owned by this feeder");
-                goto case VjdStat.VJD_STAT_FREE;
-            case VjdStat.VJD_STAT_FREE:
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_X);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Y);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_Z);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RX);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RY);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_RZ);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL0);
-                _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL1);
+                goto case VjdStatFree;
+            case VjdStatFree:
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.X);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Y);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Z);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Rx);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Ry);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Rz);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Slider0);
+                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Slider1);
 
-                var joystick = new Joystick(_vJoy, id) 
+                var joystick = new Joystick(VJoy.AcquireController(id)) 
                 { 
-                    ButtonCount = _vJoy.GetVJDButtonNumber(id), 
-                    ContPovNumber = _vJoy.GetVJDContPovNumber(id), 
-                    DiscPovNumber = _vJoy.GetVJDDiscPovNumber(id) 
+                    ButtonCount = VJoy.GetVJDButtonNumber(id), 
+                    ContPovNumber = VJoy.GetVJDContPovNumber(id), 
+                    DiscPovNumber = VJoy.GetVJDDiscPovNumber(id) 
                 };
-                    
-                uint DllVer = 0;
-                uint DrvVer = 0;
-                if (!_vJoy.DriverMatch(ref DllVer, ref DrvVer))
-                    _plugin.OnPluginStatusChanged(PluginStatus.Error, "Version of Driver does NOT match DLL Version.");
-                switch (vjdStatus)
-                {
-                    case VjdStat.VJD_STAT_OWN:
-                        _plugin.OnPluginStatusChanged(PluginStatus.Error, "Failed to acquire vJoy device");
-                        return null;
-                    case VjdStat.VJD_STAT_FREE:
-                        if (_vJoy.AcquireVJD(id))
-                            break;
-                        goto case VjdStat.VJD_STAT_OWN;
-                }
 
-                long maxValue = 0;
-                    
-                _vJoy.GetVJDAxisMax(id, HID_USAGES.HID_USAGE_X, ref maxValue);
-                joystick.MaxValue = (int)maxValue;
-                    
-                _vJoy.ResetVJD(id);
+                if (joystick.Controller is not null)
+                {
+                    _plugin.OnPluginStatusChanged(PluginStatus.Error, "Failed to acquire vJoy device");
+                    return null;
+                }
+                
+                joystick.Controller.Reset();
                     
                 for (uint nBtn = 0; nBtn < joystick.ButtonCount; ++nBtn)
-                    _vJoy.SetBtn(false, id, nBtn);
+                    joystick.SetBtn(false, nBtn);
                     
                 return joystick;
-            case VjdStat.VJD_STAT_BUSY:
+            case VjdStatBusy:
                 _plugin.OnPluginStatusChanged(PluginStatus.Error, "vJoy Device is already owned by another feeder. Cannot continue");
                 break;
-            case VjdStat.VJD_STAT_MISS:
+            case VjdStatMiss:
                 _plugin.OnPluginStatusChanged(PluginStatus.Error, "vJoy Device is not installed or disabled.Cannot continue");
                 break;
             default:
@@ -140,10 +140,12 @@ public static class JoystickManager
     }
 }
 
-public class Joystick(vJoy joy, uint id)
+public class Joystick(IVJoyController joy)
 {
-    public uint Id { get; } = id;
-    public int MaxValue { get; set; }
+    public IVJoyController Controller => joy;
+
+    public uint Id => joy.Id;
+    public int MaxValue { get; } = (int?)joy.AxisMaxValue ?? int.MaxValue;
     public int ButtonCount { get; set; }
 
     public int X { get; set; } = int.MinValue;
@@ -157,18 +159,45 @@ public class Joystick(vJoy joy, uint id)
         
     public int ContPovNumber { get; set; }
     public int DiscPovNumber { get; set; }
-    public void SetAxis(int value, HID_USAGES hidUsage)
+    public void SetAxis(int value, VJoyControllerManager.USAGES hidUsage)
     {
-        joy.SetAxis(value, Id, hidUsage);
+        switch (hidUsage)
+        {
+            case VJoyControllerManager.USAGES.X: joy.SetAxisX(value); break;
+            case VJoyControllerManager.USAGES.Y: joy.SetAxisY(value); break;
+            case VJoyControllerManager.USAGES.Z: joy.SetAxisZ(value); break;
+            case VJoyControllerManager.USAGES.Rx: joy.SetAxisRx(value); break;
+            case VJoyControllerManager.USAGES.Ry: joy.SetAxisRy(value); break;
+            case VJoyControllerManager.USAGES.Rz: joy.SetAxisRz(value); break;
+            case VJoyControllerManager.USAGES.Slider0: joy.SetSlider0(value); break;
+            case VJoyControllerManager.USAGES.Slider1: joy.SetSlider1(value); break;
+            case VJoyControllerManager.USAGES.Wheel: joy.SetWheel(value); break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(hidUsage), hidUsage, null);
+        }
     }
 
-    public void SetBtn(bool value, uint commandInfoValue)
+    public void SetBtn(bool press, uint commandInfoValue)
     {
-        joy.SetBtn(value, Id, commandInfoValue);
+        if(press)
+            joy.PressButton(commandInfoValue);
+        else
+            joy.ReleaseButton(commandInfoValue);
     }
 
     public void SetDiscPov(int commandInfoValue, uint pov)
     {
-        joy.SetDiscPov(commandInfoValue, Id, pov);
+        joy.SetDiscPov(commandInfoValue, pov);
     }
+
+    public static string GetCompatibleAxisName(string axisName) =>
+        axisName switch
+        {
+            "SL0" => "Slider0",
+            "Sl1" => "Slider1",
+            "RX" => "Rx",
+            "RY" => "Ry",
+            "RZ" => "Rz",
+            _ => axisName
+        };
 }

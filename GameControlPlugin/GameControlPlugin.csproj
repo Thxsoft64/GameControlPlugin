@@ -9,7 +9,10 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
         <PluginApiDir Condition="$(OS) == 'Windows_NT'">C:\Program Files\Logi\LogiPluginService\</PluginApiDir>
+        <PluginApiDir Condition="$(OS) != 'Windows_NT'">/Applications/Utilities/LogiPluginService.app/Contents/MonoBundle/</PluginApiDir>
+
         <PluginDir Condition="$(OS) == 'Windows_NT'">$(LocalAppData)\Logi\LogiPluginService\Plugins\</PluginDir>
+        <PluginDir Condition="$(OS) != 'Windows_NT'">~/Library/Application\ Support/Logi/LogiPluginService/Plugins/</PluginDir>
 
         <BaseOutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\bin\'))</BaseOutputPath>
         <OutputPath>$(BaseOutputPath)$(Configuration)\bin\</OutputPath>
@@ -39,9 +42,6 @@
         <Reference Include="PluginApi">
             <HintPath>$(PluginApiDir)PluginApi.dll</HintPath>
         </Reference>
-    </ItemGroup>
-    <ItemGroup>
-      <PackageReference Include="vJoyInterface" Version="0.2.1.6" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="package\" />
@@ -80,5 +80,8 @@
          <EmbeddedResource Include="Resources\ToggleOnOnUpDark.png" />
          <EmbeddedResource Include="Resources\ToggleUpDark.png" />
          <EmbeddedResource Remove="obj\**" />
+     </ItemGroup>
+     <ItemGroup>
+       <PackageReference Include="CoreDX.vJoy.Wrapper" Version="1.2.3" />
      </ItemGroup>
 </Project>

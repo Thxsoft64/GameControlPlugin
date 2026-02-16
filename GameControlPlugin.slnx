@@ -1,0 +1,9 @@
+<Solution>
+  <Folder Name="/Files/">
+    <File Path=".vscode\launch.json" />
+    <File Path=".vscode\tasks.json " />
+    <File Path=".gitignore" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="GameControlPlugin\GameControlPlugin.csproj" />
+</Solution>

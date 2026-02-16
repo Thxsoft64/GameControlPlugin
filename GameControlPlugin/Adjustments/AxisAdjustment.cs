@@ -5,31 +5,31 @@
 
     using Helpers;
 
-    internal abstract class AxisAdjustment : PluginDynamicAdjustment
+    public abstract class AxisAdjustment : PluginDynamicAdjustment
     {
         internal AxisAdjustment(string displayName, string description, string groupName)
             : base(displayName, description, groupName, false)
         {
-            this.DisplayName = $"{displayName} (Rotary Adjustment)";
-            this.GroupName = "Not used";
-            this.MakeProfileAction("text;Enter the adjustment speed (Normal, Fast, Slow, [1-1000]) and any options:");
+            DisplayName = $"{displayName} (Rotary Adjustment)";
+            GroupName = "Not used";
+            MakeProfileAction("text;Enter the adjustment speed (Normal, Fast, Slow, [1-1000]) and any options:");
         }
 
         protected override void ApplyAdjustment(string actionParameter, int ticks)
         {
             if (GameControlPlugin.PluginError != "")
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
+                Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
             
             if (GameControlPlugin.PluginWarning != "" && !GameControlPlugin.InWarning)
             {
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
+                Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
                 GameControlPlugin.PluginWarning = "";
                 GameControlPlugin.InWarning = true;
             }
 
             if (GameControlPlugin.InWarning && GameControlPlugin.PluginWarningStopwatch.ElapsedMilliseconds > 2000L)
             {
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
+                Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
                 GameControlPlugin.InWarning = false;
             }
 
@@ -38,54 +38,54 @@
                 DoAdjustment(GameControlPlugin.GetCommandInfo(actionParameter), actionParameter, ticks);
             }
 
-            this.AdjustmentValueChanged(actionParameter);
-            this.ActionImageChanged(actionParameter);
+            AdjustmentValueChanged(actionParameter);
+            ActionImageChanged(actionParameter);
         }
 
         protected abstract void DoAdjustment(CommandInfoType commandInfo, string actionParameter, int ticks);
 
         protected override void RunCommand(string actionParameter)
         {
-            Joystick joystick = JoystickManager.GetJoystick(actionParameter);
-            AdjustmentInfo adjustmentInfo = AxisEncoderAdjustment.GetAdjustmentInfo(actionParameter, joystick);
+            var joystick = JoystickManager.GetJoystick(actionParameter);
+            var adjustmentInfo = GetAdjustmentInfo(actionParameter, joystick);
 
             adjustmentInfo.StickValue = joystick.MaxValue / 2;
             adjustmentInfo.SetStickValue(joystick);
             
-            this.ActionImageChanged(actionParameter);
+            ActionImageChanged(actionParameter);
         }
 
         protected override string GetAdjustmentValue(string actionParameter)
         {
-            CommandInfoType commandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
+            var commandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
 
             if (!commandInfo.DrawNumbers)
                 return string.Empty;
 
-            Joystick joystick = JoystickManager.GetJoystick(actionParameter);
-            AdjustmentInfo adjustmentInfo = GetAdjustmentInfo(actionParameter, joystick);
+            var joystick = JoystickManager.GetJoystick(actionParameter);
+            var adjustmentInfo = GetAdjustmentInfo(actionParameter, joystick);
 
             // MinValue on initialisation
             if (adjustmentInfo.StickValue == int.MinValue)
             {
                 adjustmentInfo.StickValue = JoystickManager.GetAxisDefaultValue(actionParameter) ?? joystick.MaxValue / 2;
                 
-                AdjustmentCache.AddEntry(this.GetType().FullName, adjustmentInfo.StickId, adjustmentInfo.StickAxis, actionParameter);
+                AdjustmentCache.AddEntry(GetType().FullName, adjustmentInfo.StickId, adjustmentInfo.StickAxis, actionParameter);
             }
             
             if (GameControlPlugin.PluginError != "")
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
+                Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
             
             if (GameControlPlugin.PluginWarning != "" && !GameControlPlugin.InWarning)
             {
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
+                Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
                 GameControlPlugin.PluginWarning = "";
                 GameControlPlugin.InWarning = true;
             }
 
             if (GameControlPlugin.InWarning && GameControlPlugin.PluginWarningStopwatch.ElapsedMilliseconds > 2000L)
             {
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
+                Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
                 GameControlPlugin.InWarning = false;
             }
 
@@ -94,11 +94,11 @@
 
         internal static AdjustmentInfo GetAdjustmentInfo(string actionParameter, Joystick joystick)
         {
-            AdjustmentInfo adjustmentInfo = new AdjustmentInfo();
+            var adjustmentInfo = new AdjustmentInfo();
             
-            foreach(string entry in actionParameter.Split(';', StringSplitOptions.RemoveEmptyEntries))
+            foreach(var entry in actionParameter.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
-                string[] values = entry.Split('=', StringSplitOptions.RemoveEmptyEntries);
+                var values = entry.Split('=', StringSplitOptions.RemoveEmptyEntries);
 
                 if (values.Length < 2)
                     continue;
@@ -122,38 +122,36 @@
 
         protected override BitmapImage GetCommandImage(string actionParameter, PluginImageSize imageSize)
         {
-            CommandInfoType commandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
+            var commandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
             
             if (GameControlPlugin.PluginError != "")
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
+                Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
             if (GameControlPlugin.PluginWarning != "" && !GameControlPlugin.InWarning)
             {
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
+                Plugin.OnPluginStatusChanged(PluginStatus.Warning, GameControlPlugin.PluginWarning);
                 GameControlPlugin.PluginWarning = "";
                 GameControlPlugin.InWarning = true;
             }
 
             if (GameControlPlugin.InWarning && GameControlPlugin.PluginWarningStopwatch.ElapsedMilliseconds > 2000L)
             {
-                this.Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
+                Plugin.OnPluginStatusChanged(PluginStatus.Normal, null);
                 GameControlPlugin.InWarning = false;
             }
 
-            using (BitmapBuilder bitmapBuilder = new BitmapBuilder(imageSize))
+            using var bitmapBuilder = new BitmapBuilder(imageSize);
+            bitmapBuilder.SetBackgroundImage(EmbeddedResources.ReadImage(commandInfo.RotaryPath));
+            if (commandInfo.Label != "")
             {
-                bitmapBuilder.SetBackgroundImage(EmbeddedResources.ReadImage(commandInfo.RotaryPath));
-                if (commandInfo.Label != "")
-                {
-                    bitmapBuilder.FillRectangle(0, (int)(0.6 * (commandInfo.LabelPos + 2)) - commandInfo.LabelSize / 2, 50, commandInfo.LabelSize, commandInfo.LabelBackgroundColor);
-                    bitmapBuilder.DrawText(commandInfo.Label ?? "", 0, (int)(0.6 * (commandInfo.LabelPos + 2)) - 14, 50, commandInfo.LabelSize + 6, commandInfo.LabelColor, commandInfo.LabelSize, 18);
-                }
-
-                return bitmapBuilder.ToImage();
+                bitmapBuilder.FillRectangle(0, (int)(0.6 * (commandInfo.LabelPos + 2)) - commandInfo.LabelSize / 2, 50, commandInfo.LabelSize, commandInfo.LabelBackgroundColor);
+                bitmapBuilder.DrawText(commandInfo.Label ?? "", 0, (int)(0.6 * (commandInfo.LabelPos + 2)) - 14, 50, commandInfo.LabelSize + 6, commandInfo.LabelColor, commandInfo.LabelSize, 18);
             }
+
+            return bitmapBuilder.ToImage();
         }
     }
 
-    internal class AdjustmentInfo
+    public class AdjustmentInfo
     {
         private PropertyInfo _stickAxisProperty;
         private HID_USAGES _hidUsages;

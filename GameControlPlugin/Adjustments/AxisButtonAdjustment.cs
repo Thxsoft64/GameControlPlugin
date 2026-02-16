@@ -2,17 +2,12 @@
 {
     using Commands;
 
-    internal class AxisButtonAdjustment : AxisAdjustment
+    public class AxisButtonAdjustment() : AxisAdjustment("Encoder via Button Presses", $"Adjusts an axis using buttons (UpButton=X,DownButton=Y for axis {GameControlPlugin.AxisNames})", "Button Axis Adjustment")
     {
-        public AxisButtonAdjustment()
-            : base("Encoder via Button Presses", $"Adjusts an axis using buttons (UpButton=X,DownButton=Y for axis {GameControlPlugin.AxisNames})", "Button Axis Adjustment")
-        {
-        }
-
         protected override void DoAdjustment(CommandInfoType commandInfo, string actionParameter, int ticks)
         {
-            Joystick joystick = JoystickManager.GetJoystick(actionParameter);
-            AdjustmentInfo adjustmentInfo = GetAdjustmentInfo(actionParameter, joystick);
+            var joystick = JoystickManager.GetJoystick(actionParameter);
+            var adjustmentInfo = GetAdjustmentInfo(actionParameter, joystick);
 
             adjustmentInfo.StickValue += ticks * commandInfo.Value;
 
@@ -24,16 +19,14 @@
 
             adjustmentInfo.SetStickValue(joystick);
 
-            if (ticks > 0 && adjustmentInfo.UpButtonId.HasValue)
+            switch (ticks)
             {
-                this.Plugin.ExecuteGenericAction(typeof(ButtonPress).FullName, $"{actionParameter};{adjustmentInfo.UpButtonId}", 1);
-            }
-            else
-            {
-                if (ticks < 0 && adjustmentInfo.DownButtonId.HasValue)
-                {
-                    this.Plugin.ExecuteGenericAction(typeof(ButtonPress).FullName, $"{actionParameter};{adjustmentInfo.DownButtonId}", 1);
-                }
+                case > 0 when adjustmentInfo.UpButtonId.HasValue:
+                    Plugin.ExecuteGenericAction(typeof(ButtonPress).FullName, $"{actionParameter};{adjustmentInfo.UpButtonId}", 1);
+                    break;
+                case < 0 when adjustmentInfo.DownButtonId.HasValue:
+                    Plugin.ExecuteGenericAction(typeof(ButtonPress).FullName, $"{actionParameter};{adjustmentInfo.DownButtonId}", 1);
+                    break;
             }
         }
     }

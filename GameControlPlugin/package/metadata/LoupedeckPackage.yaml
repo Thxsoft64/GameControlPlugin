@@ -15,7 +15,7 @@ displayName: Game Control
 pluginFileName: GameControlPlugin.dll
 
 # Plugin version.
-version: 0.6
+version: 0.7
 
 # Author of the plugin. The author can be a company or an individual developer.
 author: Mikal Shaikh, Steven White
@@ -30,11 +30,11 @@ copyright: Copyright © 2023 Mikal Shaikh and Steven White. All rights reserved.
 
 # Location of plugin files on Windows (relative to the plugin base directory).
 # This parameter is required to support Windows.
-pluginFolderWin: win
+#pluginFolderWin: win
 
 # Location of plugin files on macOS (relative to the plugin base directory).
 # This parameter is required to support Mac.
-#pluginFolderMac: mac
+pluginFolderMac: bin
 
 # List of supported devices.
 supportedDevices:
@@ -53,7 +53,7 @@ pluginCapabilities:
 #- ActivatesApplication
 
 # Minimum Loupedeck version supported.
-minimumLoupedeckVersion: 5.6
+minimumLoupedeckVersion: 6.0
 
 
 # ==================================================================================================

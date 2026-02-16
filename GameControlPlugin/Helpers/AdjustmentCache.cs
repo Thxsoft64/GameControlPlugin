@@ -2,14 +2,14 @@
 {
     public static class AdjustmentCache
     {
-        private static readonly object Lock = new object();
-        private static readonly DictionaryNoCase<AdjustmentCacheEntry> Cache = new DictionaryNoCase<AdjustmentCacheEntry>();
+        private static readonly object Lock = new();
+        private static readonly DictionaryNoCase<AdjustmentCacheEntry> Cache = new();
 
         public static void AddEntry(string pluginName, uint stickId, string axisName, string actionParameter)
         {
             lock (Lock)
             {
-                string key = GetKey(stickId, axisName);
+                var key = GetKey(stickId, axisName);
                 
                 if(!Cache.ContainsKey(key))
                     Cache.Add(key, new AdjustmentCacheEntry()
@@ -22,9 +22,9 @@
        
         public static AdjustmentCacheEntry Get(uint stickId, string axisName)
         {
-            string key = GetKey(stickId, axisName);
+            var key = GetKey(stickId, axisName);
 
-            if (Cache.TryGetValue(key, out AdjustmentCacheEntry entry))
+            if (Cache.TryGetValue(key, out var entry))
                 return entry;
 
             return null;

@@ -9,8 +9,8 @@
     {
         private static uint _defaultJoystickId; 
         private static Plugin _plugin;
-        private static readonly vJoy _vJoy = new vJoy();
-        private static readonly object _lock = new Object();
+        private static readonly vJoy _vJoy = new();
+        private static readonly object _lock = new();
         public static readonly IDictionary<uint, Joystick> Joysticks = new Dictionary<uint, Joystick>();
         public static readonly IDictionary<int, uint> JoystickIdHashMap = new Dictionary<int, uint>();
 
@@ -21,13 +21,13 @@
 
         public static Joystick GetJoystick(string actionParameter)
         {
-            int idHash = actionParameter.GetHashCode();
+            var idHash = actionParameter.GetHashCode();
 
-            if (!JoystickIdHashMap.TryGetValue(idHash, out uint id))
+            if (!JoystickIdHashMap.TryGetValue(idHash, out var id))
             {
-                foreach(string settings in actionParameter.Split(';', StringSplitOptions.RemoveEmptyEntries))
+                foreach(var settings in actionParameter.Split(';', StringSplitOptions.RemoveEmptyEntries))
                 {
-                    string[] value = settings.Split('=');
+                    var value = settings.Split('=');
 
                     if (value.Length == 2 && string.Compare(value[0].Trim(), "vjoyid", StringComparison.OrdinalIgnoreCase) == 0)
                     {
@@ -42,7 +42,7 @@
             if (id == 0)
                 id = _defaultJoystickId;
             
-            if (!Joysticks.TryGetValue(id, out Joystick joystick))
+            if (!Joysticks.TryGetValue(id, out var joystick))
             {
                 lock (_lock)
                 {
@@ -60,7 +60,7 @@
 
         private static Joystick MakeJoystick(uint id, string actionParameter)
         {
-            VjdStat vjdStatus = _vJoy.GetVJDStatus(id);
+            var vjdStatus = _vJoy.GetVJDStatus(id);
             
             switch (vjdStatus)
             {
@@ -77,7 +77,7 @@
                     _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL0);
                     _vJoy.GetVJDAxisExist(id, HID_USAGES.HID_USAGE_SL1);
 
-                    Joystick joystick = new Joystick(_vJoy, id) 
+                    var joystick = new Joystick(_vJoy, id) 
                         { 
                             ButtonCount = _vJoy.GetVJDButtonNumber(id), 
                             ContPovNumber = _vJoy.GetVJDContPovNumber(id), 
@@ -126,9 +126,9 @@
 
         public static int? GetAxisDefaultValue(string actionParameter)
         {
-            foreach(string p in actionParameter.Split(";", StringSplitOptions.RemoveEmptyEntries))
+            foreach(var p in actionParameter.Split(";", StringSplitOptions.RemoveEmptyEntries))
             {
-                string[] values = p.Split("=");
+                var values = p.Split("=");
 
                 if (values.Length == 2 && values[0].Trim().ToLower() == "defaultvalue")
                 {
@@ -140,17 +140,9 @@
         }
     }
 
-    public class Joystick
+    public class Joystick(vJoy joy, uint id)
     {
-        private vJoy _vJoy;
-
-        public Joystick(vJoy joy, uint id)
-        {
-            Id = id;
-            _vJoy = joy;
-        }
-
-        public uint Id { get; }
+        public uint Id { get; } = id;
         public int MaxValue { get; set; }
         public int ButtonCount { get; set; }
 
@@ -167,17 +159,17 @@
         public int DiscPovNumber { get; set; }
         public void SetAxis(int value, HID_USAGES hidUsage)
         {
-            _vJoy.SetAxis(value, Id, hidUsage);
+            joy.SetAxis(value, Id, hidUsage);
         }
 
         public void SetBtn(bool value, uint commandInfoValue)
         {
-            _vJoy.SetBtn(value, Id, commandInfoValue);
+            joy.SetBtn(value, Id, commandInfoValue);
         }
 
         public void SetDiscPov(int commandInfoValue, uint pov)
         {
-            _vJoy.SetDiscPov(commandInfoValue, Id, pov);
+            joy.SetDiscPov(commandInfoValue, Id, pov);
         }
     }
 }

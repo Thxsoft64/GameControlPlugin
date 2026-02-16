@@ -6,8 +6,9 @@
     {
         protected override void RunCommand(string actionParameter)
         {
-            var CommandInfo = new CommandInfoType();
-            CommandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
+            
+            var commandInfo = GameControlPlugin.GetCommandInfo(actionParameter);
+            
             if (GameControlPlugin.PluginError != "")
                 Plugin.OnPluginStatusChanged(PluginStatus.Error, GameControlPlugin.PluginError);
             if (GameControlPlugin.PluginWarning != "" && !GameControlPlugin.InWarning)
@@ -25,18 +26,18 @@
 
             var joystick = JoystickManager.GetJoystick(actionParameter);
 
-            GameControlPlugin.Buttons[CommandInfo.Value] = !GameControlPlugin.Buttons[CommandInfo.Value];
-            GameControlPlugin.Buttons[CommandInfo.Value + 1] = !GameControlPlugin.Buttons[CommandInfo.Value];
+            GameControlPlugin.Buttons[commandInfo.Value] = !GameControlPlugin.Buttons[commandInfo.Value];
+            GameControlPlugin.Buttons[commandInfo.Value + 1] = !GameControlPlugin.Buttons[commandInfo.Value];
             
-            joystick.SetBtn(GameControlPlugin.Buttons[CommandInfo.Value], (uint)CommandInfo.Value);
-            joystick.SetBtn(GameControlPlugin.Buttons[CommandInfo.Value + 1], (uint)(CommandInfo.Value + 1));
+            joystick.SetBtn(GameControlPlugin.Buttons[commandInfo.Value], (uint)commandInfo.Value);
+            joystick.SetBtn(GameControlPlugin.Buttons[commandInfo.Value + 1], (uint)(commandInfo.Value + 1));
             
-            if (CommandInfo.DXSendType == 0)
+            if (commandInfo.DXSendType == 0)
             {
-                if (GameControlPlugin.Buttons[CommandInfo.Value])
-                    Task.Delay(JoystickManager.ButtonPressDelay).ContinueWith(t => joystick.SetBtn(false, (uint)CommandInfo.Value));
+                if (GameControlPlugin.Buttons[commandInfo.Value])
+                    Task.Delay(JoystickManager.ButtonPressDelay).ContinueWith(t => joystick.SetBtn(false, (uint)commandInfo.Value));
                 else
-                    Task.Delay(JoystickManager.ButtonPressDelay).ContinueWith(t => joystick.SetBtn(false, (uint)(CommandInfo.Value + 1)));
+                    Task.Delay(JoystickManager.ButtonPressDelay).ContinueWith(t => joystick.SetBtn(false, (uint)(commandInfo.Value + 1)));
             }
 
             ActionImageChanged(actionParameter);

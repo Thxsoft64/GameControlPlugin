@@ -11,8 +11,8 @@ public static class JoystickManager
     private static uint _defaultJoystickId; 
     private static readonly VJoyControllerManager VJoy = VJoyControllerManager.GetManager();
     private static readonly object Lock = new();
-    public static readonly IDictionary<uint, Joystick> Joysticks = new Dictionary<uint, Joystick>();
-    public static readonly IDictionary<int, uint> JoystickIdHashMap = new Dictionary<int, uint>();
+    private static readonly Dictionary<uint, Joystick> Joysticks = new ();
+    private static readonly Dictionary<int, uint> JoystickIdHashMap = new ();
 
     public static void Dispose()
     {
@@ -55,42 +55,25 @@ public static class JoystickManager
                 {
                     joystick = MakeJoystick(id);
 
-                    Joysticks.Add(id, joystick);
+                    if(joystick is not null)
+                        Joysticks.Add(id, joystick);
                 }
             }
         }
 
         return joystick;
     }
-
-    private const int VjdStatOwn = 1;
-    private const int VjdStatFree = 2;
-    private const int VjdStatBusy = 3;
-    private const int VjdStatMiss = 4;
-    private const int VjdStatUnknown = 5;
     
     private static Joystick MakeJoystick(uint id)
     {
-        if (!VJoy.DriverMatch)
-            _plugin.OnPluginStatusChanged(PluginStatus.Error, "Version of Driver does NOT match DLL Version.");
-        
-        var vjdStatus = VJoy.GetVJDStatus(id);
+        var vjdStatus = (VjdStat)VJoy.GetVJDStatus(id);
             
         switch (vjdStatus)
         {
-            case VjdStatOwn:
+            case VjdStat.VJD_STAT_OWN:
                 _plugin.OnPluginStatusChanged(PluginStatus.Error, "vJoy Device is already owned by this feeder");
-                goto case VjdStatFree;
-            case VjdStatFree:
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.X);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Y);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Z);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Rx);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Ry);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Rz);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Slider0);
-                // VJoy.GetVJDAxisExist(id, VJoyControllerManager.USAGES.Slider1);
-
+                goto case VjdStat.VJD_STAT_FREE;
+            case VjdStat.VJD_STAT_FREE:
                 var joystick = new Joystick(VJoy.AcquireController(id)) 
                 { 
                     ButtonCount = VJoy.GetVJDButtonNumber(id), 
@@ -98,7 +81,7 @@ public static class JoystickManager
                     DiscPovNumber = VJoy.GetVJDDiscPovNumber(id) 
                 };
 
-                if (joystick.Controller is not null)
+                if (joystick.Controller is null)
                 {
                     _plugin.OnPluginStatusChanged(PluginStatus.Error, "Failed to acquire vJoy device");
                     return null;
@@ -110,10 +93,10 @@ public static class JoystickManager
                     joystick.SetBtn(false, nBtn);
                     
                 return joystick;
-            case VjdStatBusy:
+            case VjdStat.VJD_STAT_BUSY:
                 _plugin.OnPluginStatusChanged(PluginStatus.Error, "vJoy Device is already owned by another feeder. Cannot continue");
                 break;
-            case VjdStatMiss:
+            case VjdStat.VJD_STAT_MISS:
                 _plugin.OnPluginStatusChanged(PluginStatus.Error, "vJoy Device is not installed or disabled.Cannot continue");
                 break;
             default:

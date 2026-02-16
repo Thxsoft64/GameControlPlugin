@@ -449,7 +449,7 @@ public class GameControlPlugin : Plugin
             ToggleAsButton = DefaultToggleAsButton
         };
 
-        if (text == null || text.Split(':').Length == 2 && text.Length == 65) // What are these?
+        if (text == null || text.Split('-').Length == 2 && text.Length == 65) // What are these?
             return commandInfo;
         
         foreach (var parameter in text.Split(";", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))

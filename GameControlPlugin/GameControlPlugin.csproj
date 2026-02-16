@@ -3,7 +3,8 @@
         <RootNamespace>Loupedeck.GameControlPlugin</RootNamespace>
         <ErrorReport>prompt</ErrorReport>
         <WarningLevel>4</WarningLevel>
-        
+        <AssemblyVersion>0.8.0</AssemblyVersion>
+
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 
@@ -17,10 +18,8 @@
         <OutputPath>$(BaseOutputPath)$(Configuration)\bin\</OutputPath>
 
         <PluginShortName>GameControl</PluginShortName>
-
     </PropertyGroup>
     <ItemGroup>
-        <None Include="App.config" />
         <None Remove="obj\**" />
     </ItemGroup>
     <ItemGroup>

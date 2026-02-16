@@ -1,83 +1,85 @@
 using Loupedeck.GameControlPlugin.Helpers;
 
-namespace Loupedeck.GameControlPlugin
+namespace Loupedeck.GameControlPlugin;
+
+using System;
+using System.Diagnostics;
+using System.IO;
+
+public class GameControlPlugin : Plugin
 {
-    using System;
-    using System.Diagnostics;
-    using System.IO;
+    public const string AxisNames = "X, Y, Z, RX, RY, RZ, SL0, SL1";
+    public static readonly bool[] Buttons = new bool[200];
+    public static bool DefaultDrawNumbers = true;
+    public static bool DefaultDrawToggleIndicators = true;
+    public static BitmapColor DefaultLabelBackgroundColor = BitmapColor.Transparent;
+    public static BitmapColor DefaultLabelColor = BitmapColor.White;
+    public static int DefaultLabelSize = 14;
+    public static int DefaultLabelPos = 7;
+    public static int DefaultDXSendType;
+    public static bool DefaultToggleAsButton;
+    public static int DefaultAdjustmentSpeed = 100;
+    public static string ToggleOnOffOnUpResourcePath;
+    public static string ToggleOnOffOnMiddleResourcePath;
+    public static string ToggleOnOffOnDownResourcePath;
+    public static string ToggleOnOnOnUpResourcePath;
+    public static string ToggleOnOnOnMiddleResourcePath;
+    public static string ToggleOnOnOnDownResourcePath;
+    public static string ToggleOnOnUpResourcePath;
+    public static string ToggleOnOnDownResourcePath;
+    public static string ToggleOnOffUpResourcePath;
+    public static string ToggleOnOffDownResourcePath;
+    public static string ToggleDownResourcePath;
+    public static string ToggleUpResourcePath;
+    public static string ToggleMiddleResourcePath;
+    public static string DefaultButtonPath;
+    public static string DefaultRotaryPath;
+    public static string PluginError;
+    public static string PluginWarning;
+    public static Stopwatch PluginWarningStopwatch;
+    public static bool InWarning;
 
-    public class GameControlPlugin : Plugin
+    public override bool UsesApplicationApiOnly => true;
+
+    public override bool HasNoApplication => true;
+
+    public GameControlPlugin()
     {
-        public const string AxisNames = "X, Y, Z, RX, RY, RZ, SL0, SL1";
-        public static readonly bool[] Buttons = new bool[200];
-        public static bool DefaultDrawNumbers = true;
-        public static bool DefaultDrawToggleIndicators = true;
-        public static BitmapColor DefaultLabelBackgroundColor = BitmapColor.Transparent;
-        public static BitmapColor DefaultLabelColor = BitmapColor.White;
-        public static int DefaultLabelSize = 14;
-        public static int DefaultLabelPos = 7;
-        public static int DefaultDXSendType;
-        public static bool DefaultToggleAsButton;
-        public static int DefaultAdjustmentSpeed = 100;
-        public static string ToggleOnOffOnUpResourcePath;
-        public static string ToggleOnOffOnMiddleResourcePath;
-        public static string ToggleOnOffOnDownResourcePath;
-        public static string ToggleOnOnOnUpResourcePath;
-        public static string ToggleOnOnOnMiddleResourcePath;
-        public static string ToggleOnOnOnDownResourcePath;
-        public static string ToggleOnOnUpResourcePath;
-        public static string ToggleOnOnDownResourcePath;
-        public static string ToggleOnOffUpResourcePath;
-        public static string ToggleOnOffDownResourcePath;
-        public static string ToggleDownResourcePath;
-        public static string ToggleUpResourcePath;
-        public static string ToggleMiddleResourcePath;
-        public static string DefaultButtonPath;
-        public static string DefaultRotaryPath;
-        public static string PluginError;
-        public static string PluginWarning;
-        public static Stopwatch PluginWarningStopwatch;
-        public static bool InWarning;
+        PluginLog.Init(Log);
 
-        public override bool UsesApplicationApiOnly => true;
-
-        public override bool HasNoApplication => true;
-
-        public GameControlPlugin()
-        {
-            PluginLog.Init(Log);
-
-            PluginResources.Init(this.Assembly);
-        }
+        PluginResources.Init(this.Assembly);
+    }
         
-        public override void Load()
+    public override void Load()
+    {
+        Info.DisplayName = "GameControl";
+        Info.Homepage = "https://loupedeck.com/developer/";
+        Info.Icon16x16 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon16x16.png");
+        Info.Icon32x32 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon32x32.png");
+        Info.Icon48x48 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon48x48.png");
+        Info.Icon256x256 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon256x256.png");
+        ToggleOnOffOnUpResourcePath = EmbeddedResources.FindFile("ToggleOnOffOnUpDark.png");
+        ToggleOnOffOnMiddleResourcePath = EmbeddedResources.FindFile("ToggleOnOffOnMiddleDark.png");
+        ToggleOnOffOnDownResourcePath = EmbeddedResources.FindFile("ToggleOnOffOnDownDark.png");
+        ToggleOnOnOnUpResourcePath = EmbeddedResources.FindFile("ToggleOnOnOnUpDark.png");
+        ToggleOnOnOnMiddleResourcePath = EmbeddedResources.FindFile("ToggleOnOnOnMiddleDark.png");
+        ToggleOnOnOnDownResourcePath = EmbeddedResources.FindFile("ToggleOnOnOnDownDark.png");
+        ToggleOnOnUpResourcePath = EmbeddedResources.FindFile("ToggleOnOnUpDark.png");
+        ToggleOnOnDownResourcePath = EmbeddedResources.FindFile("ToggleOnOnDownDark.png");
+        ToggleOnOffUpResourcePath = EmbeddedResources.FindFile("ToggleOnOffUpDark.png");
+        ToggleOnOffDownResourcePath = EmbeddedResources.FindFile("ToggleOnOffDownDark.png");
+        ToggleUpResourcePath = EmbeddedResources.FindFile("ToggleUpDark.png");
+        ToggleDownResourcePath = EmbeddedResources.FindFile("ToggleDownDark.png");
+        ToggleMiddleResourcePath = EmbeddedResources.FindFile("ToggleMiddleDark.png");
+        DefaultButtonPath = EmbeddedResources.FindFile("BlackSquareButton.png");
+        DefaultRotaryPath = EmbeddedResources.FindFile("GrayRotary.png");
+        PluginError = "";
+        PluginWarning = "";
+        PluginWarningStopwatch = new Stopwatch();
+        InWarning = false;
+
+        try
         {
-            Info.DisplayName = "GameControl";
-            Info.Homepage = "https://loupedeck.com/developer/";
-            Info.Icon16x16 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon16x16.png");
-            Info.Icon32x32 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon32x32.png");
-            Info.Icon48x48 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon48x48.png");
-            Info.Icon256x256 = EmbeddedResources.ReadImage("Loupedeck.GameControlPlugin.Resources.Icon256x256.png");
-            ToggleOnOffOnUpResourcePath = EmbeddedResources.FindFile("ToggleOnOffOnUpDark.png");
-            ToggleOnOffOnMiddleResourcePath = EmbeddedResources.FindFile("ToggleOnOffOnMiddleDark.png");
-            ToggleOnOffOnDownResourcePath = EmbeddedResources.FindFile("ToggleOnOffOnDownDark.png");
-            ToggleOnOnOnUpResourcePath = EmbeddedResources.FindFile("ToggleOnOnOnUpDark.png");
-            ToggleOnOnOnMiddleResourcePath = EmbeddedResources.FindFile("ToggleOnOnOnMiddleDark.png");
-            ToggleOnOnOnDownResourcePath = EmbeddedResources.FindFile("ToggleOnOnOnDownDark.png");
-            ToggleOnOnUpResourcePath = EmbeddedResources.FindFile("ToggleOnOnUpDark.png");
-            ToggleOnOnDownResourcePath = EmbeddedResources.FindFile("ToggleOnOnDownDark.png");
-            ToggleOnOffUpResourcePath = EmbeddedResources.FindFile("ToggleOnOffUpDark.png");
-            ToggleOnOffDownResourcePath = EmbeddedResources.FindFile("ToggleOnOffDownDark.png");
-            ToggleUpResourcePath = EmbeddedResources.FindFile("ToggleUpDark.png");
-            ToggleDownResourcePath = EmbeddedResources.FindFile("ToggleDownDark.png");
-            ToggleMiddleResourcePath = EmbeddedResources.FindFile("ToggleMiddleDark.png");
-            DefaultButtonPath = EmbeddedResources.FindFile("BlackSquareButton.png");
-            DefaultRotaryPath = EmbeddedResources.FindFile("GrayRotary.png");
-            PluginError = "";
-            PluginWarning = "";
-            PluginWarningStopwatch = new Stopwatch();
-            InWarning = false;
-            
             JoystickManager.Initialise(this);
 
             var pluginDataDirectory = GetPluginDataDirectory();
@@ -402,382 +404,386 @@ namespace Loupedeck.GameControlPlugin
                 }
             }
         }
-
-        public override void Unload()
+        catch (Exception ex)
         {
+            OnPluginStatusChanged(Loupedeck.PluginStatus.Error, ex.Message);
         }
+    }
 
-        private void OnApplicationStarted(object sender, EventArgs e)
-        {
-        }
+    public override void Unload()
+    {
+    }
 
-        private void OnApplicationStopped(object sender, EventArgs e)
-        {
-        }
+    private void OnApplicationStarted(object sender, EventArgs e)
+    {
+    }
 
-        public override void RunCommand(string commandName, string parameter)
-        {
-        }
+    private void OnApplicationStopped(object sender, EventArgs e)
+    {
+    }
 
-        public override void ApplyAdjustment(string adjustmentName, string parameter, int diff)
-        {
-        }
+    public override void RunCommand(string commandName, string parameter)
+    {
+    }
 
-        public static CommandInfoType GetCommandInfo(string parameter)
-        {
-            var commandInfo = new CommandInfoType { 
-                Value = -1, 
-                Label = "", 
-                LabelBackgroundColor = DefaultLabelBackgroundColor, 
-                LabelColor = DefaultLabelColor,
-                LabelSize = DefaultLabelSize,
-                LabelPos = DefaultLabelPos,
-                DrawNumbers = DefaultDrawNumbers,
-                DrawToggleIndicators = DefaultDrawToggleIndicators,
-                ButtonPath = DefaultButtonPath,
-                RotaryPath = DefaultRotaryPath,
-                DXSendType = DefaultDXSendType,
-                ToggleAsButton = DefaultToggleAsButton
-            };
+    public override void ApplyAdjustment(string adjustmentName, string parameter, int diff)
+    {
+    }
+
+    public static CommandInfoType GetCommandInfo(string parameter)
+    {
+        var commandInfo = new CommandInfoType { 
+            Value = -1, 
+            Label = "", 
+            LabelBackgroundColor = DefaultLabelBackgroundColor, 
+            LabelColor = DefaultLabelColor,
+            LabelSize = DefaultLabelSize,
+            LabelPos = DefaultLabelPos,
+            DrawNumbers = DefaultDrawNumbers,
+            DrawToggleIndicators = DefaultDrawToggleIndicators,
+            ButtonPath = DefaultButtonPath,
+            RotaryPath = DefaultRotaryPath,
+            DXSendType = DefaultDXSendType,
+            ToggleAsButton = DefaultToggleAsButton
+        };
             
-            var strArray1 = parameter != null ? parameter.Split(";") : new string[1] { "" };
+        var strArray1 = parameter != null ? parameter.Split(";") : new string[1] { "" };
             
-            for (var index = 0; index < strArray1.Length; ++index)
+        foreach (var t in strArray1)
+        {
+            var strArray2 = t.Split("=");
+            var lower1 = strArray2[0].Trim().ToLower();
+            if (strArray2.Length == 1)
             {
-                var strArray2 = strArray1[index].Split("=");
-                var lower1 = strArray2[0].Trim().ToLower();
-                if (strArray2.Length == 1)
+                if (int.TryParse(lower1, out var result1))
                 {
-                    if (int.TryParse(lower1, out var result1))
-                    {
-                        commandInfo.Value = result1;
-                    }
-                    else
-                    {
-                        switch (lower1)
-                        {
-                            case "c":
-                            case "center":
-                                commandInfo.Value = 0;
-                                continue;
-                            case "d":
-                            case "down":
-                                commandInfo.Value = 2;
-                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareDownButton.png");
-                                continue;
-                            case "f":
-                            case "fast":
-                                commandInfo.Value = 200;
-                                continue;
-                            case "l":
-                            case "left":
-                                commandInfo.Value = 3;
-                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareLeftButton.png");
-                                continue;
-                            case "max":
-                                commandInfo.Value = 100;
-                                continue;
-                            case "min":
-                                commandInfo.Value = -100;
-                                continue;
-                            case "n":
-                            case "norm":
-                            case "normal":
-                                commandInfo.Value = 100;
-                                continue;
-                            case "r":
-                            case "right":
-                                commandInfo.Value = 1;
-                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareRightButton.png");
-                                continue;
-                            case "s":
-                            case "slow":
-                                commandInfo.Value = 25;
-                                continue;
-                            case "u":
-                            case "up":
-                                commandInfo.Value = 0;
-                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareUpButton.png");
-                                continue;
-                            default:
-                                commandInfo.Value = -1;
-                                PluginWarning = "Invalid Value";
-                                PluginWarningStopwatch.Restart();
-                                continue;
-                        }
-                    }
+                    commandInfo.Value = result1;
                 }
-                else if (strArray2.Length == 2)
+                else
                 {
-                    var str = strArray2[1].Trim();
-                    var lower2 = str.ToLower();
                     switch (lower1)
                     {
-                        case "vjoyid":
-                        case "defaultvalue":
-                        case "upbutton":
-                        case "downbutton": 
-                        case "axis":
+                        case "c":
+                        case "center":
+                            commandInfo.Value = 0;
                             continue;
-                        case "bt":
-                        case "buttontype":
-                            switch (lower2)
-                            {
-                                case "black round":
-                                case "br":
-                                case "bround":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackRoundButton.png");
-                                    continue;
-                                case "black square":
-                                case "bs":
-                                case "bsquare":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareButton.png");
-                                    continue;
-                                case "ccw":
-                                case "counterclockwise":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareCCWButton.png");
-                                    continue;
-                                case "clockwise":
-                                case "cw":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareCWButton.png");
-                                    continue;
-                                case "d":
-                                case "down":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareDownButton.png");
-                                    continue;
-                                case "gr":
-                                case "gray round":
-                                case "ground":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("GrayRoundButton.png");
-                                    continue;
-                                case "l":
-                                case "left":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareLeftButton.png");
-                                    continue;
-                                case "r":
-                                case "right":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareRightButton.png");
-                                    continue;
-                                case "red round":
-                                case "rr":
-                                case "rround":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("RedRoundButton.png");
-                                    continue;
-                                case "u":
-                                case "up":
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareUpButton.png");
-                                    continue;
-                                default:
-                                    commandInfo.ButtonPath = EmbeddedResources.FindFile("GraySquareButton.png");
-                                    continue;
-                            }
-                        case "dn":
-                        case "drawnumbers":
-                            switch (lower2)
-                            {
-                                case "true":
-                                case "on":
-                                case "yes":
-                                    commandInfo.DrawNumbers = true;
-                                    continue;
-                                case "false":
-                                case "off":
-                                case "no":
-                                    commandInfo.DrawNumbers = false;
-                                    continue;
-                                default:
-                                    continue;
-                            }
-                        case "drawtoggleindicators":
-                        case "dti":
-                            switch (lower2)
-                            {
-                                case "true":
-                                case "on":
-                                case "yes":
-                                    commandInfo.DrawToggleIndicators = true;
-                                    continue;
-                                case "false":
-                                case "off":
-                                case "no":
-                                    commandInfo.DrawToggleIndicators = false;
-                                    continue;
-                                default:
-                                    continue;
-                            }
-                        case "dx":
-                        case "dxsendtype":
-                        case "dxst":
-                            switch (lower2)
-                            {
-                                case "hold":
-                                case "h":
-                                    commandInfo.DXSendType = 1;
-                                    continue;
-                                default:
-                                    commandInfo.DXSendType = 0;
-                                    continue;
-                            }
+                        case "d":
+                        case "down":
+                            commandInfo.Value = 2;
+                            commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareDownButton.png");
+                            continue;
+                        case "f":
+                        case "fast":
+                            commandInfo.Value = 200;
+                            continue;
                         case "l":
-                        case "label":
-                            commandInfo.Label = str;
+                        case "left":
+                            commandInfo.Value = 3;
+                            commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareLeftButton.png");
                             continue;
-                        case "labelbackgroundcolor":
-                        case "lb":
-                        case "lbc":
-                            switch (lower2)
-                            {
-                                case "black":
-                                    commandInfo.LabelBackgroundColor = BitmapColor.Black;
-                                    continue;
-                                case "blue":
-                                    commandInfo.LabelBackgroundColor = new BitmapColor(50, 50, 200);
-                                    continue;
-                                case "gray":
-                                    commandInfo.LabelBackgroundColor = new BitmapColor(128, 128, 128);
-                                    continue;
-                                case "green":
-                                    commandInfo.LabelBackgroundColor = new BitmapColor(50, 200, 50);
-                                    continue;
-                                case "none":
-                                    commandInfo.LabelBackgroundColor = BitmapColor.Transparent;
-                                    continue;
-                                case "purple":
-                                    commandInfo.LabelBackgroundColor = new BitmapColor(150, 50, 200);
-                                    continue;
-                                case "red":
-                                    commandInfo.LabelBackgroundColor = new BitmapColor(200, 50, 50);
-                                    continue;
-                                case "white":
-                                    commandInfo.LabelBackgroundColor = BitmapColor.White;
-                                    continue;
-                                default:
-                                    if (!uint.TryParse(lower2, out var result2))
-                                    {
-                                        PluginWarning = "Invalid Color";
-                                        PluginWarningStopwatch.Restart();
-                                        continue;
-                                    }
-
-                                    commandInfo.LabelBackgroundColor = new BitmapColor(result2);
-                                    continue;
-                            }
-                        case "labelcolor":
-                        case "lc":
-                            switch (lower2)
-                            {
-                                case "black":
-                                    commandInfo.LabelColor = BitmapColor.Black;
-                                    continue;
-                                case "blue":
-                                    commandInfo.LabelColor = new BitmapColor(50, 50, 200);
-                                    continue;
-                                case "gray":
-                                    commandInfo.LabelColor = new BitmapColor(128, 128, 128);
-                                    continue;
-                                case "green":
-                                    commandInfo.LabelColor = new BitmapColor(50, 200, 50);
-                                    continue;
-                                case "none":
-                                    commandInfo.LabelColor = BitmapColor.Transparent;
-                                    continue;
-                                case "purple":
-                                    commandInfo.LabelColor = new BitmapColor(150, 50, 200);
-                                    continue;
-                                case "red":
-                                    commandInfo.LabelColor = new BitmapColor(200, 50, 50);
-                                    continue;
-                                case "white":
-                                    commandInfo.LabelColor = BitmapColor.White;
-                                    continue;
-                                default:
-                                    if (!uint.TryParse(lower2, out var result3))
-                                    {
-                                        PluginWarning = "Invalid Color";
-                                        PluginWarningStopwatch.Restart();
-                                        continue;
-                                    }
-
-                                    commandInfo.LabelColor = new BitmapColor(result3);
-                                    continue;
-                            }
-                        case "labelpos":
-                        case "lp":
-                            switch (lower2)
-                            {
-                                case "top":
-                                case "t":
-                                    commandInfo.LabelPos = 7;
-                                    continue;
-                                case "center":
-                                case "c":
-                                    commandInfo.LabelPos = 40;
-                                    continue;
-                                case "bottom":
-                                case "b":
-                                    commandInfo.LabelPos = 73;
-                                    continue;
-                                default:
-                                    if (!int.TryParse(lower2, out commandInfo.LabelPos))
-                                    {
-                                        PluginWarning = "Invalid Label Position (must be top, center, bottom, or a number)";
-                                        PluginWarningStopwatch.Restart();
-                                    }
-
-                                    continue;
-                            }
-                        case "labelsize":
-                        case "ls":
-                            if (!int.TryParse(lower2, out var result4))
-                            {
-                                PluginWarning = "Invalid Label Size (must be a number)";
-                                PluginWarningStopwatch.Restart();
-                                continue;
-                            }
-
-                            commandInfo.LabelSize = result4;
+                        case "max":
+                            commandInfo.Value = 100;
                             continue;
-                        case "rotarytype":
-                        case "rt":
-                            if (!(lower2 == "gray"))
-                            {
-                                var num = lower2 == "g" ? 1 : 0;
-                            }
-
-                            commandInfo.RotaryPath = EmbeddedResources.FindFile("GrayRotary.png");
+                        case "min":
+                            commandInfo.Value = -100;
                             continue;
-                        case "tab":
-                        case "toggleasbutton":
-                            switch (lower2)
-                            {
-                                case "true":
-                                case "on":
-                                case "yes":
-                                    commandInfo.ToggleAsButton = true;
-                                    continue;
-                                case "false":
-                                case "off":
-                                case "no":
-                                    commandInfo.ToggleAsButton = false;
-                                    continue;
-                                default:
-                                    continue;
-                            }
+                        case "n":
+                        case "norm":
+                        case "normal":
+                            commandInfo.Value = 100;
+                            continue;
+                        case "r":
+                        case "right":
+                            commandInfo.Value = 1;
+                            commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareRightButton.png");
+                            continue;
+                        case "s":
+                        case "slow":
+                            commandInfo.Value = 25;
+                            continue;
+                        case "u":
+                        case "up":
+                            commandInfo.Value = 0;
+                            commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareUpButton.png");
+                            continue;
                         default:
-                            PluginWarning = "Unknown Option";
+                            commandInfo.Value = -1;
+                            PluginWarning = "Invalid Value";
                             PluginWarningStopwatch.Restart();
                             continue;
                     }
                 }
-                else
+            }
+            else if (strArray2.Length == 2)
+            {
+                var str = strArray2[1].Trim();
+                var lower2 = str.ToLower();
+                switch (lower1)
                 {
-                    PluginWarning = "Invalid option format. Option format is <option> = <optionvalue>";
-                    PluginWarningStopwatch.Restart();
-                    break;
+                    case "vjoyid":
+                    case "defaultvalue":
+                    case "upbutton":
+                    case "downbutton": 
+                    case "axis":
+                        continue;
+                    case "bt":
+                    case "buttontype":
+                        switch (lower2)
+                        {
+                            case "black round":
+                            case "br":
+                            case "bround":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackRoundButton.png");
+                                continue;
+                            case "black square":
+                            case "bs":
+                            case "bsquare":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareButton.png");
+                                continue;
+                            case "ccw":
+                            case "counterclockwise":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareCCWButton.png");
+                                continue;
+                            case "clockwise":
+                            case "cw":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareCWButton.png");
+                                continue;
+                            case "d":
+                            case "down":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareDownButton.png");
+                                continue;
+                            case "gr":
+                            case "gray round":
+                            case "ground":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("GrayRoundButton.png");
+                                continue;
+                            case "l":
+                            case "left":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareLeftButton.png");
+                                continue;
+                            case "r":
+                            case "right":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareRightButton.png");
+                                continue;
+                            case "red round":
+                            case "rr":
+                            case "rround":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("RedRoundButton.png");
+                                continue;
+                            case "u":
+                            case "up":
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("BlackSquareUpButton.png");
+                                continue;
+                            default:
+                                commandInfo.ButtonPath = EmbeddedResources.FindFile("GraySquareButton.png");
+                                continue;
+                        }
+                    case "dn":
+                    case "drawnumbers":
+                        switch (lower2)
+                        {
+                            case "true":
+                            case "on":
+                            case "yes":
+                                commandInfo.DrawNumbers = true;
+                                continue;
+                            case "false":
+                            case "off":
+                            case "no":
+                                commandInfo.DrawNumbers = false;
+                                continue;
+                            default:
+                                continue;
+                        }
+                    case "drawtoggleindicators":
+                    case "dti":
+                        switch (lower2)
+                        {
+                            case "true":
+                            case "on":
+                            case "yes":
+                                commandInfo.DrawToggleIndicators = true;
+                                continue;
+                            case "false":
+                            case "off":
+                            case "no":
+                                commandInfo.DrawToggleIndicators = false;
+                                continue;
+                            default:
+                                continue;
+                        }
+                    case "dx":
+                    case "dxsendtype":
+                    case "dxst":
+                        switch (lower2)
+                        {
+                            case "hold":
+                            case "h":
+                                commandInfo.DXSendType = 1;
+                                continue;
+                            default:
+                                commandInfo.DXSendType = 0;
+                                continue;
+                        }
+                    case "l":
+                    case "label":
+                        commandInfo.Label = str;
+                        continue;
+                    case "labelbackgroundcolor":
+                    case "lb":
+                    case "lbc":
+                        switch (lower2)
+                        {
+                            case "black":
+                                commandInfo.LabelBackgroundColor = BitmapColor.Black;
+                                continue;
+                            case "blue":
+                                commandInfo.LabelBackgroundColor = new BitmapColor(50, 50, 200);
+                                continue;
+                            case "gray":
+                                commandInfo.LabelBackgroundColor = new BitmapColor(128, 128, 128);
+                                continue;
+                            case "green":
+                                commandInfo.LabelBackgroundColor = new BitmapColor(50, 200, 50);
+                                continue;
+                            case "none":
+                                commandInfo.LabelBackgroundColor = BitmapColor.Transparent;
+                                continue;
+                            case "purple":
+                                commandInfo.LabelBackgroundColor = new BitmapColor(150, 50, 200);
+                                continue;
+                            case "red":
+                                commandInfo.LabelBackgroundColor = new BitmapColor(200, 50, 50);
+                                continue;
+                            case "white":
+                                commandInfo.LabelBackgroundColor = BitmapColor.White;
+                                continue;
+                            default:
+                                if (!uint.TryParse(lower2, out var result2))
+                                {
+                                    PluginWarning = "Invalid Color";
+                                    PluginWarningStopwatch.Restart();
+                                    continue;
+                                }
+
+                                commandInfo.LabelBackgroundColor = new BitmapColor(result2);
+                                continue;
+                        }
+                    case "labelcolor":
+                    case "lc":
+                        switch (lower2)
+                        {
+                            case "black":
+                                commandInfo.LabelColor = BitmapColor.Black;
+                                continue;
+                            case "blue":
+                                commandInfo.LabelColor = new BitmapColor(50, 50, 200);
+                                continue;
+                            case "gray":
+                                commandInfo.LabelColor = new BitmapColor(128, 128, 128);
+                                continue;
+                            case "green":
+                                commandInfo.LabelColor = new BitmapColor(50, 200, 50);
+                                continue;
+                            case "none":
+                                commandInfo.LabelColor = BitmapColor.Transparent;
+                                continue;
+                            case "purple":
+                                commandInfo.LabelColor = new BitmapColor(150, 50, 200);
+                                continue;
+                            case "red":
+                                commandInfo.LabelColor = new BitmapColor(200, 50, 50);
+                                continue;
+                            case "white":
+                                commandInfo.LabelColor = BitmapColor.White;
+                                continue;
+                            default:
+                                if (!uint.TryParse(lower2, out var result3))
+                                {
+                                    PluginWarning = "Invalid Color";
+                                    PluginWarningStopwatch.Restart();
+                                    continue;
+                                }
+
+                                commandInfo.LabelColor = new BitmapColor(result3);
+                                continue;
+                        }
+                    case "labelpos":
+                    case "lp":
+                        switch (lower2)
+                        {
+                            case "top":
+                            case "t":
+                                commandInfo.LabelPos = 7;
+                                continue;
+                            case "center":
+                            case "c":
+                                commandInfo.LabelPos = 40;
+                                continue;
+                            case "bottom":
+                            case "b":
+                                commandInfo.LabelPos = 73;
+                                continue;
+                            default:
+                                if (!int.TryParse(lower2, out commandInfo.LabelPos))
+                                {
+                                    PluginWarning = "Invalid Label Position (must be top, center, bottom, or a number)";
+                                    PluginWarningStopwatch.Restart();
+                                }
+
+                                continue;
+                        }
+                    case "labelsize":
+                    case "ls":
+                        if (!int.TryParse(lower2, out var result4))
+                        {
+                            PluginWarning = "Invalid Label Size (must be a number)";
+                            PluginWarningStopwatch.Restart();
+                            continue;
+                        }
+
+                        commandInfo.LabelSize = result4;
+                        continue;
+                    case "rotarytype":
+                    case "rt":
+                        if (!(lower2 == "gray"))
+                        {
+                            var num = lower2 == "g" ? 1 : 0;
+                        }
+
+                        commandInfo.RotaryPath = EmbeddedResources.FindFile("GrayRotary.png");
+                        continue;
+                    case "tab":
+                    case "toggleasbutton":
+                        switch (lower2)
+                        {
+                            case "true":
+                            case "on":
+                            case "yes":
+                                commandInfo.ToggleAsButton = true;
+                                continue;
+                            case "false":
+                            case "off":
+                            case "no":
+                                commandInfo.ToggleAsButton = false;
+                                continue;
+                            default:
+                                continue;
+                        }
+                    default:
+                        PluginWarning = "Unknown Option";
+                        PluginWarningStopwatch.Restart();
+                        continue;
                 }
             }
-
-            return commandInfo;
+            else
+            {
+                PluginWarning = "Invalid option format. Option format is <option> = <optionvalue>";
+                PluginWarningStopwatch.Restart();
+                break;
+            }
         }
+
+        return commandInfo;
     }
 }
